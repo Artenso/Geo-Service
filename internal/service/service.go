@@ -12,19 +12,15 @@ import (
 type IService interface {
 	RegistrateUser(ctx context.Context, user *model.User) error
 	AuthenticateUser(ctx context.Context, user *model.User) (string, error)
-	GetAddrByPart(ctx context.Context, input string) ([]*model.Address, error)
-	GetAddrByCoord(ctx context.Context, lat, lng string) ([]*model.Address, error)
 }
 
 type service struct {
 	storage storage.IStorage
-	geoServ GeoProvider
 }
 
-func NewService(storage storage.IStorage, geoServ GeoProvider) IService {
+func NewService(storage storage.IStorage) IService {
 	return &service{
 		storage: storage,
-		geoServ: geoServ,
 	}
 }
 
@@ -62,13 +58,4 @@ func (s *service) AuthenticateUser(ctx context.Context, user *model.User) (strin
 	}
 
 	return "", model.ErrorUserNotFound
-}
-
-func (s *service) GetAddrByPart(ctx context.Context, input string) ([]*model.Address, error) {
-	return s.geoServ.AddressSearch(input)
-
-}
-
-func (s *service) GetAddrByCoord(ctx context.Context, lat, lng string) ([]*model.Address, error) {
-	return s.geoServ.GeoCode(lat, lng)
 }
