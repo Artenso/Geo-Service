@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package github.com.Artenso.Geo_Service.geo.api;
+
+option go_package = "github.com/Artenso/Geo-Service/geo/pkg/grpc_geo_provider";
+
+service GeoProvider  {
+  rpc AddressSearch(AddressSearchRequest) returns (AddressSearchResponse);
+  rpc GeoCode(GeoCodeRequest) returns (GeoCodeResponse);
+}
+
+message Address {
+    string city = 1;
+    string street = 2;
+    string house = 3;
+    string lat = 4;
+    string lon = 5;
+}
+
+message AddressSearchRequest {
+    string input = 1;
+}
+
+message AddressSearchResponse {
+    repeated Address addresses = 1;
+}
+
+message GeoCodeRequest {
+    string lat = 1;
+    string lng = 2;
+}
+
+message GeoCodeResponse {
+    repeated Address addresses = 1;
+}

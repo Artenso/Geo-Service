@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package github.com.Artenso.Geo_Service.auth.api;
+
+option go_package = "github.com/Artenso/Geo-Service/auth/pkg/auth_service";
+
+import "google/protobuf/empty.proto";
+
+service AuthService  {
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  rpc LogIn(LogInRequest) returns (LogInResponse);
+  rpc Verify(VerifyRequest) returns (google.protobuf.Empty);
+}
+
+message RegisterRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message RegisterResponse {
+    int64 id = 1;
+}
+
+message LogInRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message LogInResponse {
+    string token = 1;
+}
+
+message VerifyRequest {
+    string token = 1;
+}
