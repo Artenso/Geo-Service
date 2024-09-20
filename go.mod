@@ -3,15 +3,16 @@ module github.com/Artenso/Geo-Service
 go 1.22.0
 
 require (
+	github.com/Artenso/Geo-Provider v0.0.0-20240913183950-245dc4e7ea8f
 	github.com/go-chi/chi v1.5.5
 	github.com/go-chi/jwtauth v1.2.0
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.16.3
 	golang.org/x/crypto v0.27.0
+	google.golang.org/grpc v1.66.2
 )
 
 require (
-	github.com/Artenso/Geo-Provider v0.0.0-20240913183950-245dc4e7ea8f // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
@@ -25,7 +26,6 @@ require (
 	golang.org/x/sys v0.25.0 // indirect
 	golang.org/x/text v0.18.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240604185151-ef581f913117 // indirect
-	google.golang.org/grpc v1.66.2 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 )
 
