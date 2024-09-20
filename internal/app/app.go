@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"net/http/pprof"
 	"os"
 	"time"
 
@@ -91,6 +92,14 @@ func (a *App) initHTTPServer(ctx context.Context) error {
 
 		r.Post("/api/address/search", a.serviceProvider.Controller(ctx).GetAddrByPart)
 		r.Post("/api/address/geocode", a.serviceProvider.Controller(ctx).GetAddrByCoord)
+
+		r.Route("/metrics/pprof", func(r chi.Router) {
+			r.HandleFunc("/*", pprof.Index)
+			r.HandleFunc("/cmdline", pprof.Cmdline)
+			r.HandleFunc("/profile", pprof.Profile)
+			r.HandleFunc("/symbol", pprof.Symbol)
+			r.HandleFunc("/trace", pprof.Trace)
+		})
 	})
 
 	a.httpServer = &http.Server{

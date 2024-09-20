@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/Artenso/Geo-Provider/client"
 	"github.com/Artenso/Geo-Service/internal/converter"
 	"github.com/Artenso/Geo-Service/internal/model"
 	"github.com/Artenso/Geo-Service/internal/responder"
@@ -16,12 +17,14 @@ import (
 type Controller struct {
 	responder responder.Responder
 	service   service.IService
+	rpcClient client.Client
 }
 
-func NewController(responder responder.Responder, service service.IService) *Controller {
+func NewController(responder responder.Responder, service service.IService, rpcClient client.Client) *Controller {
 	return &Controller{
 		responder: responder,
 		service:   service,
+		rpcClient: rpcClient,
 	}
 }
 
@@ -135,7 +138,7 @@ func (c *Controller) GetAddrByPart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := c.service.GetAddrByPart(r.Context(), requestAddressSearch.Query)
+	res, err := c.rpcClient.AddressSearch(r.Context(), requestAddressSearch.Query)
 	if err != nil {
 		c.responder.ErrorInternal(w, err)
 		return
@@ -174,7 +177,7 @@ func (c *Controller) GetAddrByCoord(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := c.service.GetAddrByCoord(r.Context(), requestAddressGeocode.Lat, requestAddressGeocode.Lng)
+	res, err := c.rpcClient.GeoCode(r.Context(), requestAddressGeocode.Lat, requestAddressGeocode.Lng)
 	if err != nil {
 		c.responder.ErrorInternal(w, err)
 		return

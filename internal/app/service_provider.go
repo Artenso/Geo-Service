@@ -3,8 +3,12 @@ package app
 import (
 	"context"
 	"fmt"
+	"net"
 	"os"
 
+	"github.com/Artenso/Geo-Provider/client"
+	gRPCclient "github.com/Artenso/Geo-Provider/client/grpc_geo_provider"
+	jsonRPCclient "github.com/Artenso/Geo-Provider/client/json_rpc_geo_provider"
 	"github.com/Artenso/Geo-Service/internal/controller"
 	"github.com/Artenso/Geo-Service/internal/logger"
 	"github.com/Artenso/Geo-Service/internal/responder"
@@ -12,19 +16,16 @@ import (
 	storage "github.com/Artenso/Geo-Service/internal/storage/pg"
 	"github.com/jackc/pgx/v5"
 	"github.com/ptflp/godecoder"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type serviceProvider struct {
-	dbConn *pgx.Conn
-
-	storage storage.IStorage
-
-	geoServ service.GeoProvider
-
-	servise service.IService
-
-	responder responder.Responder
-
+	dbConn     *pgx.Conn
+	storage    storage.IStorage
+	servise    service.IService
+	responder  responder.Responder
+	rpcClient  client.Client
 	controller *controller.Controller
 }
 
@@ -42,6 +43,7 @@ func (s *serviceProvider) DbConn(ctx context.Context) *pgx.Conn {
 			os.Getenv("DB_PORT"),
 			os.Getenv("DB_NAME"),
 		)
+
 		conn, err := pgx.Connect(ctx, dbDSN)
 		if err != nil {
 			logger.Fatalf("failed to init db connection: %s", err.Error())
@@ -61,17 +63,9 @@ func (s *serviceProvider) Storage(ctx context.Context) storage.IStorage {
 	return s.storage
 }
 
-func (s *serviceProvider) GeoServ(ctx context.Context) service.GeoProvider {
-	if s.geoServ == nil {
-		s.geoServ = service.NewGeoService(os.Getenv("DADATA_APIKEY"), os.Getenv("DADATA_SECRETKEY"))
-	}
-
-	return s.geoServ
-}
-
 func (s *serviceProvider) Service(ctx context.Context) service.IService {
 	if s.servise == nil {
-		s.servise = service.NewService(s.Storage(ctx), s.GeoServ(ctx))
+		s.servise = service.NewService(s.Storage(ctx))
 	}
 
 	return s.servise
@@ -85,9 +79,33 @@ func (s *serviceProvider) Responder(ctx context.Context) responder.Responder {
 	return s.responder
 }
 
+func (s *serviceProvider) RPCclient(ctx context.Context) client.Client {
+	if s.rpcClient == nil {
+		switch os.Getenv("RPC_PROTOCOL") {
+		case "grpc":
+			conn, err := grpc.NewClient("localhost:8000", grpc.WithTransportCredentials(insecure.NewCredentials()))
+			if err != nil {
+				logger.Fatalf("Ошибка при подключении к серверу: %s", err)
+			}
+
+			s.rpcClient = gRPCclient.NewGRPCclient(conn)
+
+		case "json-rpc":
+			conn, err := net.Dial("tcp", "localhost:1234")
+			if err != nil {
+				logger.Fatalf("Ошибка при подключении к серверу: %s", err)
+			}
+
+			s.rpcClient = jsonRPCclient.NewJSONrpcClient(conn)
+		}
+	}
+
+	return s.rpcClient
+}
+
 func (s *serviceProvider) Controller(ctx context.Context) *controller.Controller {
 	if s.controller == nil {
-		s.controller = controller.NewController(s.Responder(ctx), s.Service(ctx))
+		s.controller = controller.NewController(s.Responder(ctx), s.Service(ctx), s.RPCclient(ctx))
 	}
 
 	return s.controller
